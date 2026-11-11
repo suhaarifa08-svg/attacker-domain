@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CYBER NOTES | Attacker Console</title>
+
+<style>
+:root {
+  --red: #ff1838;
+  --bright: #ff4055;
+  --dark-red: #650011;
+  --black: #030304;
+  --panel: rgba(10, 7, 10, 0.94);
+  --cyan: #8eeaff;
+  --muted: #82909c;
+  --green: #00ff88;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--black);
+  color: #f5f5f5;
+  font-family: "Courier New", monospace;
+  overflow-x: hidden;
+}
+
+/* Animated falling numbers */
+
+#matrix {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -2;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Moving scan lines */
+
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0.12;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(255, 0, 35, 0.2) 4px
+  );
+}
+
+.scan-beam {
+  position: fixed;
+  top: -20%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--red);
+  box-shadow: 0 0 20px var(--red);
+  opacity: 0.6;
+  z-index: 9;
+  pointer-events: none;
+  animation: scan 8s linear infinite;
+}
+
+@keyframes scan {
+  from { top: -5%; }
+  to { top: 105%; }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px #ff183822;
+  }
+  50% {
+    box-shadow: 0 0 18px #ff183866;
+  }
+}
+
+@keyframes blink {
+  50% { opacity: 0.25; }
+}
+
+@keyframes flash {
+  0%, 100% { background: transparent; }
+  15%, 40% { background: rgba(255, 0, 30, 0.2); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* Header */
+
+header {
+  min-height: 88px;
+  padding: 17px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-bottom: 1px solid var(--red);
+  background: rgba(3, 3, 4, 0.95);
+  box-shadow: 0 2px 15px #ff183822;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo {
+  font-size: 39px;
+  color: var(--red);
+  text-shadow: 0 0 18px var(--red);
+}
+
+.brand h1 {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  font-size: clamp(22px, 3vw, 34px);
+  letter-spacing: 3px;
+  color: var(--bright);
+  text-shadow: 0 0 14px #ff183877;
+}
+
+.brand p {
+  margin: 5px 0 0;
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.header-center {
+  color: #ffb5be;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.header-center span {
+  display: block;
+  color: #739eb0;
+}
+
+.demo-status {
+  border: 1px solid var(--red);
+  padding: 10px 14px;
+  color: #ff8b9a;
+  font-size: 12px;
+  animation: glow 3s infinite;
+}
+
+.dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 10px var(--red);
+  animation: blink 1s infinite;
+}
+
+/* Main layout */
+
+.layout {
+  display: grid;
+  grid-template-columns: 205px minmax(0, 1fr);
+  min-height: calc(100vh - 90px);
+}
+
+.sidebar {
+  border-right: 1px solid #67101e;
+  background: rgba(5, 4, 6, 0.94);
+  padding: 22px 12px;
+}
+
+.nav-item {
+  display: block;
+  padding: 15px 12px;
+  margin-bottom: 8px;
+  color: #c9d5df;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  font-size: 12px;
+  transition: 0.25s;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: white;
+  border-left-color: var(--red);
+  background: linear-gradient(90deg, #68000f88, transparent);
+}
+
+.sidebar-card {
+  margin-top: 45px;
+  padding: 14px 10px;
+  border: 1px solid #63101c;
+  color: #aab7c0;
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.sidebar-card strong {
+  color: var(--red);
+}
+
+main {
+  min-width: 0;
+  padding: 20px;
+}
+
+/* Hero */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 205px;
+  padding: 30px;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.8fr;
+  align-items: center;
+  gap: 20px;
+  background: linear-gradient(105deg, #150308, #080607 65%, #21000a);
+  border: 1px solid var(--red);
+  border-radius: 8px;
+  animation: glow 4s infinite;
+}
+
+.hero::before {
+  content: "010101 101010 001101 110010 010101 101101";
+  position: absolute;
+  inset: 0;
+  color: #ff1838;
+  opacity: 0.13;
+  font-size: 25px;
+  line-height: 1.8;
+  word-spacing: 16px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero-copy,
+.hood,
+.terminal {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-copy h2 {
+  margin: 0;
+  color: var(--red);
+  font-size: clamp(22px, 3vw, 34px);
+  letter-spacing: 2px;
+}
+
+.hero-copy h3 {
+  color: var(--cyan);
+  margin: 7px 0;
+  font-size: 18px;
+}
+
+.hero-copy p {
+  color: #82bdce;
+  font-size: 12px;
+}
+
+.hood {
+  text-align: center;
+  font-size: clamp(70px, 10vw, 120px);
+  color: #8b0017;
+  text-shadow: 0 0 25px #ff183866;
+  animation: pulse 4s infinite;
+}
+
+.terminal {
+  min-height: 145px;
+  padding: 15px;
+  border: 1px solid #7e1426;
+  background: #050304dd;
+  color: var(--red);
+  font-size: 11px;
+  line-height: 2.1;
+  overflow-wrap: anywhere;
+}
+
+.terminal div::before {
+  content: "> ";
+}
+
+/* Dashboard cards */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.95fr)
+                         minmax(270px, 1.3fr)
+                         minmax(200px, 0.8fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.card {
+  min-width: 0;
+  padding: 19px;
+  background: var(--panel);
+  border: 1px solid #7c1325;
+  border-radius: 9px;
+  position: relative;
+  animation: glow 5s infinite;
+}
+
+.card h3 {
+  margin: 0 0 15px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  color: #ffccd2;
+  letter-spacing: 0.5px;
+}
+
+.card h3 span {
+  color: var(--red);
+  margin-right: 7px;
+}
+
+.description {
+  color: #99a7b2;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+/* Buttons */
+
+button {
+  width: 100%;
+  margin-top: 10px;
+  min-height: 45px;
+  padding: 12px;
+  cursor: pointer;
+  border: 1px solid var(--red);
+  border-radius: 6px;
+  background: linear-gradient(90deg, #220008, #0b0507);
+  color: #f4e8eb;
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #8d0018;
+  box-shadow: 0 0 18px #ff183866;
+  transform: translateY(-1px);
+}
+
+button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+button.primary {
+  background: linear-gradient(90deg, #b80020, #ff1838);
+  box-shadow: 0 0 13px #ff183833;
+}
+
+button.stop {
+  border-color: #6d7580;
+}
+
+button.clear {
+  border-color: #7a3540;
+}
+
+/* Login terminal */
+
+.login-terminal {
+  min-height: 230px;
+  border-top: 1px solid #4c1720;
+  padding-top: 12px;
+}
+
+.login-line {
+  display: grid;
+  grid-template-columns: 60px minmax(0, 1fr) 18px;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid #301019;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.login-line .time {
+  color: #6895a8;
+}
+
+.login-line .message {
+  color: #16d4c7;
+  overflow-wrap: anywhere;
+}
+
+.login-line.failed .message {
+  color: var(--red);
+}
+
+.login-line .symbol {
+  color: var(--green);
+}
+
+.login-line.failed .symbol {
+  color: var(--red);
+}
+
+.progress-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 17px;
+  color: var(--red);
+  font-size: 10px;
+}
+
+.progress {
+  height: 10px;
+  flex: 1;
+  max-width: 230px;
+  background: repeating-linear-gradient(
+    120deg,
+    #ff1838 0px,
+    #ff1838 15px,
+    #33000a 15px,
+    #33000a 23px
+  );
+  background-size: 46px 100%;
+  animation: progressMove 1s linear infinite;
+}
+
+@keyframes progressMove {
+  from { background-position: 0; }
+  to { background-position: 46px; }
+}
+
+/* Stats */
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 17px 0;
+  border-bottom: 1px solid #40101a;
+  color: #bfd1da;
+  font-size: 12px;
+}
+
+.stat strong {
+  font-family: Arial, sans-serif;
+  font-size: 27px;
+  color: var(--red);
+  text-shadow: 0 0 12px #ff183844;
+}
+
+/* Lower panels */
+
+.lower-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 15px;
+}
+
+.feed-row {
+  display: grid;
+  grid-template-columns: 65px 65px minmax(0, 1fr);
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid #241018;
+  font-size: 10px;
+  line-height: 1.6;
+  color: #b7cbd4;
+  overflow-wrap: anywhere;
+}
+
+.feed-row .feed-time {
+  color: #6cb0c4;
+}
+
+.feed-row .feed-type {
+  color: var(--red);
+}
+
+.world {
+  position: relative;
+  min-height: 200px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at center, #32000b 0%, #0a0307 65%);
+  border: 1px solid #38101b;
+}
+
+.world svg {
+  display: block;
+  width: 100%;
+  height: 190px;
+}
+
+.world .orbit {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+  animation: rotateOrbit 12s linear infinite;
+  transform-origin: 200px 95px;
+}
+
+@keyframes rotateOrbit {
+  to { transform: rotate(360deg); }
+}
+
+.world-footer {
+  padding: 10px;
+  color: #c66c7b;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+footer {
+  text-align: center;
+  padding: 20px 5px 10px;
+  color: var(--red);
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+/* Full-screen simulated alert */
+
+.alert-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #000d;
+}
+
+.alert-overlay.show {
+  display: flex;
+  animation: flash 0.7s;
+}
+
+.alert-box {
+  width: min(500px, 100%);
+  padding: 30px;
+  text-align: center;
+  background: #100207;
+  border: 2px solid var(--red);
+  box-shadow: 0 0 40px #ff183866;
+  animation: alertPulse 0.8s infinite alternate;
+}
+
+@keyframes alertPulse {
+  from { box-shadow: 0 0 12px #ff183844; }
+  to { box-shadow: 0 0 35px #ff183899; }
+}
+
+.alert-icon {
+  font-size: 55px;
+  color: var(--red);
+}
+
+.alert-box h2 {
+  color: var(--red);
+  letter-spacing: 2px;
+}
+
+.alert-box p {
+  color: #d3b7be;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.alert-box button {
+  max-width: 220px;
+}
+
+body.alerting::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background: #ff001a20;
+  animation: flash 0.7s;
+}
+
+@media (max-width: 1050px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stats-card {
+    grid-column: 1 / -1;
+  }
+
+  .stats-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  header {
+    padding: 15px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: flex;
+    gap: 5px;
+    overflow-x: auto;
+    padding: 8px;
+    border-right: none;
+    border-bottom: 1px solid #67101e;
+  }
+
+  .nav-item {
+    white-space: nowrap;
+    margin: 0;
+    padding: 12px;
+  }
+
+  .sidebar-card {
+    display: none;
+  }
+
+  main {
+    padding: 12px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr 0.7fr;
+    padding: 20px;
+  }
+
+  .terminal {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-grid,
+  .lower-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-card {
+    grid-column: auto;
+  }
+
+  .stats-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="matrix" aria-hidden="true"></canvas>
+<div class="scanlines"></div>
+<div class="scan-beam"></div>
+
+<header>
+  <div class="brand">
+    <div class="logo">⛨</div>
+    <div>
+      <h1>CYBER NOTES</h1>
+      <p>SECURITY OPERATIONS CENTER</p>
+    </div>
+  </div>
+
+  <div class="header-center">
+    ATTACKER SIMULATION CONSOLE
+    <span>CONTROL | SIMULATE | MONITOR</span>
+  </div>
+
+  <div class="demo-status">
+    <span class="dot"></span> DEMO MODE
+    <div style="margin:5px 0 0 18px;color:#8b9da9">
+      Not a real attack
+    </div>
+  </div>
+
+  <div style="font-size:11px;color:#bdcbd4">
+    <div id="date"></div>
+    <div id="clock" style="margin-top:6px"></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <aside class="sidebar">
+    <a href="#console" class="nav-item active">♙ Attacker Console</a>
+    <a href="#login" class="nav-item">♧ Login Pattern</a>
+    <a href="#console" class="nav-item">⚙ Simulation Control</a>
+    <a href="#events" class="nav-item">▤ Event Logs</a>
+    <a href="#stats" class="nav-item">☷ Statistics</a>
+
+    <div class="sidebar-card">
+      <strong>◉ TARGET ENVIRONMENT</strong>
+      <br>
+      Web Application
+      <br>
+      <strong>Demo Only</strong>
+      <br><br>
+      <span style="color:#ff4055">●</span> Simulation Ready
+      <br>
+      <span style="color:#00ff88">●</span> Local Console Active
+    </div>
+  </aside>
+
+  <main>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <h2>CYBER NOTES</h2>
+        <h3>ATTACKER SIMULATION</h3>
+        <p>Practice. Learn. Stay Secure.</p>
+        <p style="color:#ff4055">[ AUTHORIZED TRAINING ENVIRONMENT ]</p>
+      </div>
+
+      <div class="hood" aria-hidden="true">◉</div>
+
+      <div class="terminal" id="systemTerminal">
+        <div>SYSTEM INITIALIZED</div>
+        <div>SIMULATION READY</div>
+        <div>MONITORING EVENTS...</div>
+        <div id="systemMessage">AWAITING COMMAND...</div>
+      </div>
+    </section>
+
+    <section class="dashboard-grid">
+
+      <div class="card" id="console">
+        <h3><span>⊕</span> SIMULATION CONTROLS</h3>
+        <p class="description">
+          Trigger sample security events and observe how the
+          simulated monitoring console responds.
+        </p>
+
+        <button id="startBtn">▶ &nbsp; START SIMULATION</button>
+        <button id="attackBtn" class="primary">ϟ &nbsp; SIMULATE ATTACK</button>
+        <button id="loginBtn">♙ &nbsp; TEST LOGIN PATTERN</button>
+        <button id="stopBtn" class="stop">■ &nbsp; STOP SIMULATION</button>
+        <button id="clearBtn" class="clear">▤ &nbsp; CLEAR LOGS</button>
+
+        <p class="description" id="runStatus" role="status">
+          Status: Ready
+        </p>
+      </div>
+
+      <div class="card" id="login">
+        <h3><span>♙</span> LOGIN PATTERN SIMULATION</h3>
+        <p class="description" id="loginDescription">
+          Simulating a demo authentication flow...
+        </p>
+
+        <div class="login-terminal" id="loginTerminal">
+          <div class="login-line">
+            <span class="time">--:--:--</span>
+            <span class="message">Waiting for simulation...</span>
+            <span class="symbol">·</span>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress"></div>
+          <span id="progressText">STANDBY</span>
+        </div>
+      </div>
+
+      <div class="card stats-card" id="stats">
+        <h3><span>▥</span> SIMULATION STATS</h3>
+
+        <div class="stats-list">
+          <div class="stat">
+            <span>Total Events</span>
+            <strong id="totalCount">0</strong>
+          </div>
+
+          <div class="stat">
+            <span>Attack Events</span>
+            <strong id="attackCount">0</strong>
+          </div>
+
+          <div class="stat">
+            <span>Login Attempts</span>
+            <strong id="loginCount">0</strong>
+          </div>
+
+          <div class="stat">
+            <span>System Alerts</span>
+            <strong id="alertCount">0</strong>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="lower-grid">
+
+      <div class="card" id="events">
+        <h3><span>◉</span> LIVE ACTIVITY FEED</h3>
+        <div id="activityFeed" aria-live="polite">
+          <div class="feed-row">
+            <span class="feed-time">--:--:--</span>
+            <span class="feed-type">[SYSTEM]</span>
+            <span>Console initialized</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3><span>⌁</span> REAL-TIME VISUALIZATION</h3>
+
+        <div class="world">
+          <svg viewBox="0 0 400 190" role="img"
+               aria-label="Animated illustrative network visualization">
+            <defs>
+              <radialGradient id="globe">
+                <stop offset="0%" stop-color="#9d001a" stop-opacity=".5"/>
+                <stop offset="100%" stop-color="#150007" stop-opacity=".1"/>
+              </radialGradient>
+            </defs>
+
+            <circle cx="200" cy="95" r="78"
+                    fill="url(#globe)"
+                    stroke="#8b1228" stroke-width="1"/>
+
+            <ellipse cx="200" cy="95" rx="78" ry="30"
+                     fill="none" stroke="#a51a30" stroke-dasharray="4 4"/>
+
+            <ellipse cx="200" cy="95" rx="35" ry="78"
+                     fill="none" stroke="#a51a30" stroke-dasharray="4 4"/>
+
+            <path class="orbit" d="M 120 95 Q 200 5 280 95 Q 200 185 120 95"/>
+
+            <g id="networkPoints" fill="#ff1838">
+              <circle cx="145" cy="65" r="3"/>
+              <circle cx="190" cy="35" r="3"/>
+              <circle cx="245" cy="70" r="3"/>
+              <circle cx="170" cy="125" r="3"/>
+              <circle cx="235" cy="135" r="3"/>
+              <circle cx="200" cy="95" r="4"/>
+            </g>
+
+            <g stroke="#ff1838" stroke-width="1" opacity=".65">
+              <path d="M145 65 L190 35 L245 70 L200 95 L170 125 L235 135 L245 70"/>
+              <path d="M145 65 L170 125"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="world-footer">
+          DEMO NETWORK &nbsp; | &nbsp; EVENT MONITOR
+        </div>
+      </div>
+
+    </section>
+
+    <footer>
+      CYBER NOTES &nbsp; | &nbsp; EDUCATIONAL SECURITY SIMULATION
+      <br><br>
+      No real attacks. No password collection. Local demo events only.
+    </footer>
+
+  </main>
+</div>
+
+<div class="alert-overlay" id="alertOverlay"
+     role="alertdialog" aria-modal="true"
+     aria-labelledby="alertTitle">
+  <div class="alert-box">
+    <div class="alert-icon">⚠</div>
+    <h2 id="alertTitle">SIMULATED EVENT DETECTED</h2>
+    <p id="alertDetails">
+      A demo security event was generated locally.
+    </p>
+    <p>TRAINING SIMULATION — NO REAL SYSTEM ATTACKED</p>
+    <button id="closeAlertBtn">ACKNOWLEDGE ALERT</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ---------------------------
+   1. ANIMATED RED MATRIX
+---------------------------- */
+
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+let columns = [];
+let fontSize = 14;
+let matrixTimer = null;
+
+function resizeMatrix() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  canvas.width = Math.floor(window.innerWidth * dpr);
+  canvas.height = Math.floor(window.innerHeight * dpr);
+  canvas.style.width = window.innerWidth + "px";
+  canvas.style.height = window.innerHeight + "px";
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const count = Math.ceil(window.innerWidth / fontSize);
+  columns = Array.from(
+    { length: count },
+    () => Math.random() * -50
+  );
+}
+
+function drawMatrix() {
+  ctx.fillStyle = "rgba(3, 3, 4, 0.12)";
+  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+
+  ctx.font = fontSize + "px monospace";
+
+  for (let i = 0; i < columns.length; i++) {
+    const digit = Math.random() > 0.5 ? "1" : "0";
+    const x = i * fontSize;
+    const y = columns[i] * fontSize;
+
+    ctx.fillStyle = Math.random() > 0.88
+      ? "#ff6b7c"
+      : "#b50021";
+
+    ctx.fillText(digit, x, y);
+
+    if (
+      y > window.innerHeight &&
+      Math.random() > 0.975
+    ) {
+      columns[i] = 0;
+    } else {
+      columns[i] += 0.5 + Math.random() * 0.8;
+    }
+  }
+}
+
+function startMatrix() {
+  if (matrixTimer) return;
+  matrixTimer = setInterval(drawMatrix, 45);
+}
+
+function stopMatrix() {
+  clearInterval(matrixTimer);
+  matrixTimer = null;
+}
+
+window.addEventListener("resize", resizeMatrix);
+resizeMatrix();
+startMatrix();
+
+/* ---------------------------
+   2. CLOCK AND DATE
+---------------------------- */
+
+function updateClock() {
+  const now = new Date();
+
+  document.getElementById("date").textContent =
+    now.toLocaleDateString(undefined, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric"
+    });
+
+  document.getElementById("clock").textContent =
+    now.toLocaleTimeString();
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+/* ---------------------------
+   3. SIMULATION DATA
+---------------------------- */
+
+let total = 0;
+let attacks = 0;
+let logins = 0;
+let alerts = 0;
+let running = false;
+let sequenceTimer = null;
+let sequenceToken = 0;
+
+const feed = document.getElementById("activityFeed");
+const loginTerminal = document.getElementById("loginTerminal");
+
+function timestamp() {
+  return new Date().toLocaleTimeString();
+}
+
+function addFeed(type, message) {
+  const row = document.createElement("div");
+  row.className = "feed-row";
+
+  const time = document.createElement("span");
+  time.className = "feed-time";
+  time.textContent = timestamp();
+
+  const label = document.createElement("span");
+  label.className = "feed-type";
+  label.textContent = "[" + type + "]";
+
+  const text = document.createElement("span");
+  text.textContent = message;
+
+  row.append(time, label, text);
+  feed.prepend(row);
+
+  while (feed.children.length > 8) {
+    feed.lastElementChild.remove();
+  }
+}
+
+function addLoginLine(message, failed = false) {
+  const row = document.createElement("div");
+  row.className = "login-line" + (failed ? " failed" : "");
+
+  const time = document.createElement("span");
+  time.className = "time";
+  time.textContent = timestamp();
+
+  const text = document.createElement("span");
+  text.className = "message";
+  text.textContent = message;
+
+  const symbol = document.createElement("span");
+  symbol.className = "symbol";
+  symbol.textContent = failed ? "✖" : "✓";
+
+  row.append(time, text, symbol);
+  loginTerminal.appendChild(row);
+
+  while (loginTerminal.children.length > 6) {
+    loginTerminal.firstElementChild.remove();
+  }
+}
+
+function updateStats() {
+  document.getElementById("totalCount").textContent = total;
+  document.getElementById("attackCount").textContent = attacks;
+  document.getElementById("loginCount").textContent = logins;
+  document.getElementById("alertCount").textContent = alerts;
+}
+
+function recordEvent(type, message) {
+  total++;
+
+  if (type === "ATTACK") attacks++;
+  if (type === "LOGIN") logins++;
+  if (type === "ALERT") alerts++;
+
+  updateStats();
+  addFeed(type, message);
+}
+
+function setStatus(message) {
+  document.getElementById("runStatus").textContent =
+    "Status: " + message;
+
+  document.getElementById("systemMessage").textContent =
+    message.toUpperCase();
+}
+
+/* ---------------------------
+   4. SIMULATED SECURITY ALERT
+---------------------------- */
+
+let alertTimeout = null;
+
+function showAlert(title, details) {
+  const overlay = document.getElementById("alertOverlay");
+
+  document.getElementById("alertTitle").textContent = title;
+  document.getElementById("alertDetails").textContent = details;
+
+  overlay.classList.add("show");
+  document.body.classList.add("alerting");
+
+  clearTimeout(alertTimeout);
+
+  alertTimeout = setTimeout(() => {
+    document.body.classList.remove("alerting");
+  }, 800);
+}
+
+function closeAlert() {
+  document.getElementById("alertOverlay").classList.remove("show");
+  document.body.classList.remove("alerting");
+}
+
+document.getElementById("closeAlertBtn")
+  .addEventListener("click", closeAlert);
+
+/* ---------------------------
+   5. LOGIN PATTERN ANIMATION
+---------------------------- */
+
+const loginSteps = [
+  ["AUTHENTICATION INITIALIZED ...", false],
+  ["LOGIN REQUEST DETECTED ...", false],
+  ["VERIFYING DEMO CREDENTIALS ...", false],
+  ["DEMO AUTHENTICATION FAILED ...", true],
+  ["SECURITY EVENT GENERATED ...", true]
+];
+
+function stopSequence() {
+  sequenceToken++;
+  clearTimeout(sequenceTimer);
+  sequenceTimer = null;
+  running = false;
+
+  document.getElementById("progressText").textContent = "STOPPED";
+  setStatus("Simulation stopped");
+}
+
+function runLoginPattern() {
+  stopSequence();
+
+  const myToken = sequenceToken;
+  running = true;
+
+  loginTerminal.innerHTML = "";
+
+  document.getElementById("loginDescription").textContent =
+    "Running a local demo authentication sequence...";
+
+  document.getElementById("progressText").textContent =
+    "PROCESSING";
+
+  setStatus("Login pattern running");
+
+  let index = 0;
+
+  function nextStep() {
+    if (myToken !== sequenceToken || !running) return;
+
+    if (index >= loginSteps.length) {
+      running = false;
+
+      document.getElementById("progressText").textContent =
+        "PROCESS COMPLETE";
+
+      document.getElementById("loginDescription").textContent =
+        "Demo authentication sequence completed.";
+
+      setStatus("Simulation complete");
+      return;
+    }
+
+    const [message, failed] = loginSteps[index];
+
+    addLoginLine(message, failed);
+    recordEvent(
+      failed ? "LOGIN" : "SYSTEM",
+      message.replaceAll(".", "")
+    );
+
+    if (index === loginSteps.length - 1) {
+      recordEvent("ALERT", "Demo authentication alert generated");
+      showAlert(
+        "LOGIN SIMULATION ALERT",
+        "A simulated authentication failure was generated. No real login was attempted."
+      );
+    }
+
+    index++;
+
+    sequenceTimer = setTimeout(nextStep, 1100);
+  }
+
+  nextStep();
+}
+
+/* ---------------------------
+   6. SIMULATED ATTACK EVENT
+---------------------------- */
+
+function simulateAttack() {
+  recordEvent("ATTACK", "Simulated attack event triggered");
+  recordEvent("ALERT", "Demo security alert generated");
+
+  addLoginLine("SIMULATED ATTACK EVENT ...", true);
+
+  showAlert(
+    "SIMULATED ATTACK DETECTED",
+    "A local demonstration event has been generated. This did not attack any real system."
+  );
+
+  setStatus("Demo alert generated");
+}
+
+/* ---------------------------
+   7. CONTROL BUTTONS
+---------------------------- */
+
+document.getElementById("startBtn").addEventListener("click", () => {
+  if (running) {
+    setStatus("Simulation is already running");
+    return;
+  }
+
+  runLoginPattern();
+});
+
+document.getElementById("attackBtn").addEventListener("click", () => {
+  simulateAttack();
+});
+
+document.getElementById("loginBtn").addEventListener("click", () => {
+  runLoginPattern();
+});
+
+document.getElementById("stopBtn").addEventListener("click", () => {
+  stopSequence();
+});
+
+document.getElementById("clearBtn").addEventListener("click", () => {
+  stopSequence();
+
+  total = 0;
+  attacks = 0;
+  logins = 0;
+  alerts = 0;
+
+  updateStats();
+
+  feed.innerHTML = "";
+  loginTerminal.innerHTML = "";
+
+  addLoginLine("WAITING FOR SIMULATION...", false);
+  addFeed("SYSTEM", "Local demonstration logs cleared");
+
+  setStatus("Logs cleared");
+  closeAlert();
+});
+
+/* ---------------------------
+   8. INITIAL STATE
+---------------------------- */
+
+addFeed("SYSTEM", "Console initialized");
+addLoginLine("AUTHENTICATION CONSOLE READY ...", false);
+setStatus("Ready");
+updateStats();
+</script>
+
+</body>
+</html>
